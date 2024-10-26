@@ -1,0 +1,20 @@
+## MAINNET
+
+Oil12
+xpub zpub6qsjnLTN2UuAv72sV4SUdBVbjKhfs9Zp7zDRy22dnPpsopLfFFjB43RjhgndZVC1AJv78MBLzQ3CT49R8JmYL1VDogXr6qC233LwHr8cgEw
+dp m/84'/0'/0'
+first_addr bc1q98wufxmtfh5qlk7fe5dzy2z8cflvqjysrh4fx2
+
+Throwaway1
+xpub xpub6CPrPHQbGqzQTCo7kZNrCuARsQXxrr3bsUvFFidgj4L3BNrni4fEFT5s3NbGz2JEcSyTXzrKfkAmcaKxyboMjRzPMwvHjCuUWHwGD7Zvf9x
+dp m/84'/0'/0'
+first_addr bc1qpjult34k9spjfym8hss2jrwjgf0xjf40ze0pp8
+first_height 710049
+
+## TESTNET
+
+Oil12
+xpub tpubDCRo9GmRAvEWANJ5iSfMEqPoq3uYvjBPAAjrDj5iQMxAq7DCs5orw7m9xJes8hWYAwKuH3T63WrKfzzw7g9ucbjq4LUu5cgCLUPMN7gUkrL
+dp m/84'/1'/0'
+first_addr tb1q6p8uqhn8rp5wrclfhh7a5q350zravflrd79rwg
+
