@@ -29,6 +29,30 @@ but later (Oct2024) it was switched to the more recent
 [kyoto-cbf](https://github.com/rustaceanrob/kyoto).
 
 
+## How to run
+
+### The (simple) command-line variant:
+
+```
+cargo r -p icepeek-cli
+```
+
+Wait and watch the output!
+
+
+### The desktop UI variant:
+
+```
+cargo r -p icepeek-iced
+```
+
+- Optionally change the xpub & parameters
+
+- Press Continue
+
+- Wait and watch the info
+
+
 ## TODO
 
 - show state (show block heights; state Connecting, FastSync, ChilledSync; show number of peers)

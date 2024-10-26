@@ -52,8 +52,9 @@ impl Wallet {
         self.addrs.iter().map(|a| a.clone()).collect()
     }
 
-    fn preprocess_xpub() -> Result<Xpub, String> {
-        let mns0 = "oil oil oil oil oil oil oil oil oil oil oil oil";
+    /*
+    fn generate_test_xpub() -> Result<Xpub, String> {
+        let mns0 = "oil oil oil ...";
         let mn = Mnemonic::parse(mns0).map_err(|e| format!("Parsing mnemonic {}", e))?;
         let seed = mn.to_seed_normalized("");
         let xpriv = Xpriv::new_master(bitcoin::Network::Testnet, &seed)
@@ -67,12 +68,12 @@ impl Wallet {
         let xpub_level_4 = Xpub::from_priv(&secp, &xpriv_level_4);
         Ok(xpub_level_4)
     }
+    */
 
     pub fn derive_addresses(wallet_def: &WalletDefinition) -> Result<Vec<AddressInfo>, String> {
         let xpub0 = Xpub::from_str(&wallet_def.xpub).map_err(|e| format!("Parse XPub {}", e))?;
-        // let xpub0 = Self::preprocess_xpub()?;
-        // println!("XPUB {}", xpub0);
-        // println!("XPub: {}", xpub0.to_string());
+        // let xpub0 = Self::generate_test_xpub()?;
+        // println!("Xpub {}", xpub0);
         let deriv0 = DerivationPath::from_str(&wallet_def.derivation_path)
             .map_err(|e| format!("Creating DerivationPath {}", e))?;
         let mut addresses = Vec::new();
