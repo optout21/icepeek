@@ -10,4 +10,4 @@ crossbeam = "0.8.4"
 iced = "0.12.1"
 icepeek-app = { verson = "0.1.0", path = "../icepeek-app" }
 once_cell = "1.19.0"
-tokio = "1.40"
+tokio = "1.38"

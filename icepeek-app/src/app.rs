@@ -138,7 +138,7 @@ impl AppStateUpdate {
     pub fn prepare_sample_wallet_definition() -> WalletDefinition {
         Self::prepare_wallet_definition(
             "Mainnet",
-            "tpubDCaqhEwDSPmfVJqVGXrKQvdxiWWRyJ5sqPmHknJ1NHq1SuNupAF8xMnHuJxF6AqQ8wDQEyW6cBA9NfQu5mnkcyaK8btJcYDH5Yp4GeZ7Spk".to_string(),
+            "xpub6CDDB17Xj7pDDWedpLsED1JbPPQmyuapHmAzQEEs2P57hciCjwQ3ov7TfGsTZftAM2gVdPzE55L6gUvHguwWjY82518zw1Z3VbDeWgx3Jqs".to_string(),
             DEFAULT_DERIVATION_PATH_BASE.to_string(),
             "20".to_string(),
             "640000".to_string(),
@@ -221,11 +221,11 @@ impl AppStateUpdate {
                 println!("Peer connections met");
                 self.do_callback(false);
             }
-            NodeMessage::Transaction(tx) => {
-                //println!("TX FOUND! {:?}", tx);
-                let height = tx.height;
-                self.apply(&tx.transaction, height, watch);
-                self.do_callback(true);
+            NodeMessage::Progress(progress) => {
+                self.state.header_tip = progress.tip_height as u64;
+                self.state.filter_tip = progress.filter_headers as u64;
+                self.state.scan_tip = progress.filters as u64;
+                self.do_callback(false);
             }
             NodeMessage::Block(block) => {
                 println!("Block: {}", block.height);

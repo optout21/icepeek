@@ -74,6 +74,9 @@ impl Wallet {
         let xpub0 = Xpub::from_str(&wallet_def.xpub).map_err(|e| format!("Parse XPub {}", e))?;
         // let xpub0 = Self::generate_test_xpub()?;
         // println!("Xpub {}", xpub0);
+        if xpub0.network != bitcoin::NetworkKind::from(wallet_def.network) {
+            return Err(format!("Wrong network! {:?} {}", xpub0.network, wallet_def.network));
+        }
         let deriv0 = DerivationPath::from_str(&wallet_def.derivation_path)
             .map_err(|e| format!("Creating DerivationPath {}", e))?;
         let mut addresses = Vec::new();

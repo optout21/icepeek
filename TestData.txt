@@ -1,7 +1,7 @@
 ## MAINNET
 
 Oil12
-xpub zpub6qsjnLTN2UuAv72sV4SUdBVbjKhfs9Zp7zDRy22dnPpsopLfFFjB43RjhgndZVC1AJv78MBLzQ3CT49R8JmYL1VDogXr6qC233LwHr8cgEw
+xpub xpub6CDDB17Xj7pDDWedpLsED1JbPPQmyuapHmAzQEEs2P57hciCjwQ3ov7TfGsTZftAM2gVdPzE55L6gUvHguwWjY82518zw1Z3VbDeWgx3Jqs
 dp m/84'/0'/0'
 first_addr bc1q98wufxmtfh5qlk7fe5dzy2z8cflvqjysrh4fx2
 

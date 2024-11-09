@@ -206,7 +206,7 @@ impl IcedApp {
                 ]
                 .padding(2),
                 row![
-                    text("The wallet XPub, e.g. tpubDCRo9GmRAvEWANJ5iSfMEqPoq3uYvjBPAAjrDj5iQMxAq7DCs5orw7m9xJes8hWYAwKuH3T63WrKfzzw7g9ucbjq4LUu5cgCLUPMN7gUkrL").size(15),
+                    text("The wallet XPub, e.g. xpub6CDDB17Xj7pDDWedpLsED1JbPPQmyuapHmAzQEEs2P57hciCjwQ3ov7TfGsTZftAM2gVdPzE55L6gUvHguwWjY82518zw1Z3VbDeWgx3Jqs").size(15),
                 ]
                 .padding(2),
                 row![
