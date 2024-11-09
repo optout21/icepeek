@@ -2,13 +2,13 @@
 
 ## Description
 Watch-only bitcoin onchain balance checker, private and secure.
-Use it to check your deep cold wallet balances ("peek under the ice").
+Can be used for checking cold wallet balances ("peek under the ice").
 
 WARNING: Don't ever enter any seedphrase or private key in this project!
 
 Warning: This software is prototype with no warranty whatsoever.
 
-Based on compact block filters, peer-to-peer, not using servers.
+Based on compact block filters (BIP-147/148), peer-to-peer, not using servers.
 Written in Rust, using [kyoto-cbf lib](https://github.com/rustaceanrob/kyoto).
 
 Friendly Advice: Don't forget to regularly check your keys!

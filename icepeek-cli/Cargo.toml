@@ -7,6 +7,6 @@ edition = "2021"
 
 [dependencies]
 icepeek-app = { verson = "0.1.0", path = "../icepeek-app" }
-tokio = "1.40"
+tokio = "1.38"
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
