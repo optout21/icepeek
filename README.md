@@ -55,15 +55,15 @@ cargo r -p icepeek-iced
 
 ## TODO
 
-- show state (show block heights; state Connecting, FastSync, ChilledSync; show number of peers)
-- more user-friendly staarting block supoprt (no hash needed, custom height, start filters from there)
+- show state (state Connecting, FastSync, ChilledSync; show number of peers)
+- more user-friendly starting block supoprt (no hash needed, custom height, start filters from there)
 - Address discovery (gap limit, add new addresses)
 - download filters in reverse order
 
 
 ## Kyoto Qs
 
-- report more progress events (peer connect/disconnect, block header height, etc.)
+- report more progress events (peer connect/disconnect, etc.)
 
 
 ## Nakamoto Qs (obsolete)
