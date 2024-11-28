@@ -15,11 +15,11 @@ fn callback(app: &AppStateUpdate) {
     print!("Tips: ");
     if state.header_tip != 0 {
         print!(
-            " scan {:.1}% ({})    filter {:.1}% ({})",
-            state.get_scan_tip_pct(),
-            state.scan_tip,
+            " scan {:.1}% ({})    filter header {:.1}% ({})",
             state.get_filter_tip_pct(),
-            state.filter_tip
+            state.filter_tip,
+            state.get_filter_header_tip_pct(),
+            state.filter_header_tip
         );
     }
     println!("  header {}", state.header_tip);

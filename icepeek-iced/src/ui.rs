@@ -169,18 +169,18 @@ impl IcedApp {
             row![
                 text("Header tip: ").size(15),
                 text(format!("{}  ", state.header_tip)).size(15),
+                text("Filter header tip: ").size(15),
+                text(format!(
+                    "{:.1}% ({})  ",
+                    state.get_filter_header_tip_pct(),
+                    state.filter_header_tip
+                ))
+                .size(15),
                 text("Filter tip: ").size(15),
                 text(format!(
                     "{:.1}% ({})  ",
                     state.get_filter_tip_pct(),
                     state.filter_tip
-                ))
-                .size(15),
-                text("Scan tip: ").size(15),
-                text(format!(
-                    "{:.1}% ({})  ",
-                    state.get_scan_tip_pct(),
-                    state.scan_tip
                 ))
                 .size(15),
             ]

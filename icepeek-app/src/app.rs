@@ -23,9 +23,12 @@ type Height = u32;
 #[derive(Clone, Debug, Default)]
 pub struct AppState {
     // Tips
+    /// Block header
     pub header_tip: u64,
+    /// Filter header
+    pub filter_header_tip: u64,
+    /// Filter
     pub filter_tip: u64,
-    pub scan_tip: u64,
 
     // Balance
     /// Current balance
@@ -43,8 +46,8 @@ pub struct AppState {
 impl PartialEq for AppState {
     fn eq(&self, other: &AppState) -> bool {
         self.header_tip == other.header_tip
+            && self.filter_header_tip == other.filter_header_tip
             && self.filter_tip == other.filter_tip
-            && self.scan_tip == other.scan_tip
             && self.balance == other.balance
             && self.balance_in == other.balance_in
             && self.balance_out == other.balance_out
@@ -54,19 +57,19 @@ impl PartialEq for AppState {
 impl Eq for AppState {}
 
 impl AppState {
+    pub fn get_filter_header_tip_pct(&self) -> f64 {
+        if self.header_tip == 0 {
+            0f64
+        } else {
+            100f64 * (self.filter_header_tip as f64) / (self.header_tip as f64)
+        }
+    }
+
     pub fn get_filter_tip_pct(&self) -> f64 {
         if self.header_tip == 0 {
             0f64
         } else {
             100f64 * (self.filter_tip as f64) / (self.header_tip as f64)
-        }
-    }
-
-    pub fn get_scan_tip_pct(&self) -> f64 {
-        if self.header_tip == 0 {
-            0f64
-        } else {
-            100f64 * (self.scan_tip as f64) / (self.header_tip as f64)
         }
     }
 }
@@ -223,8 +226,8 @@ impl AppStateUpdate {
             }
             NodeMessage::Progress(progress) => {
                 self.state.header_tip = progress.tip_height as u64;
-                self.state.filter_tip = progress.filter_headers as u64;
-                self.state.scan_tip = progress.filters as u64;
+                self.state.filter_header_tip = progress.filter_headers as u64;
+                self.state.filter_tip = progress.filters as u64;
                 self.do_callback(false);
             }
             NodeMessage::Block(block) => {
