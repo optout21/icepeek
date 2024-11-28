@@ -8,7 +8,8 @@ use std::collections::HashMap;
 
 type Height = u32;
 
-struct UtxoInfo {
+#[derive(Clone)]
+pub struct UtxoInfo {
     is_relevant: bool,
     // Store outputs, but only relevant outputs
     out: HashMap<Address, Amount>,
@@ -33,7 +34,7 @@ impl UtxoInfo {
         self.is_relevant = true;
     }
 
-    fn total_value(&self) -> u64 {
+    pub fn total_value(&self) -> u64 {
         let mut s = 0u64;
         for (_addr, value) in &self.out {
             s = s + value.to_sat();
@@ -45,12 +46,28 @@ impl UtxoInfo {
         self.spent_height = Some(spent_height);
     }
 
+    pub fn is_relevant(&self) -> bool {
+        self.is_relevant
+    }
+
     fn is_spent(&self) -> bool {
         self.spent_height.is_some()
     }
+
+    pub fn height(&self) -> Height {
+        self.height
+    }
+
+    pub fn spent_height(&self) -> Option<Height> {
+        self.spent_height
+    }
+
+    pub fn outputs(&self) -> HashMap<Address, Amount> {
+        self.out.clone()
+    }
 }
 
-pub(crate) struct FullBalance {
+pub struct FullBalance {
     pub inn: u64,
     pub out: u64,
 }
@@ -61,14 +78,17 @@ impl FullBalance {
     }
 }
 
-pub(crate) struct UtxoStore {
+#[derive(Clone)]
+pub struct UtxoStore {
     utxos: HashMap<Txid, UtxoInfo>,
+    serial_no: u32,
 }
 
 impl UtxoStore {
     pub fn new() -> Self {
         Self {
             utxos: HashMap::new(),
+            serial_no: 0,
         }
     }
 
@@ -98,6 +118,7 @@ impl UtxoStore {
         address: Address,
         value: Amount,
     ) {
+        self.serial_no += 1;
         if !self.utxos.contains_key(&txid) {
             self.utxos.insert(txid, UtxoInfo::new(height, true));
         }
@@ -109,6 +130,7 @@ impl UtxoStore {
     }
 
     pub fn set_utxo_spent(&mut self, height: Height, txid: Txid) {
+        self.serial_no += 1;
         if !self.utxos.contains_key(&txid) {
             self.utxos.insert(txid, UtxoInfo::new(height, false)); // we don't know if this is relevant, only that it's spent
         }
@@ -128,5 +150,13 @@ impl UtxoStore {
             }
         }
         (uc, sc)
+    }
+
+    pub fn serial_no(&self) -> u32 {
+        self.serial_no
+    }
+
+    pub fn get_utxos(&self) -> HashMap<Txid, UtxoInfo> {
+        self.utxos.clone()
     }
 }

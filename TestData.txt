@@ -4,6 +4,7 @@ Oil12
 xpub xpub6CDDB17Xj7pDDWedpLsED1JbPPQmyuapHmAzQEEs2P57hciCjwQ3ov7TfGsTZftAM2gVdPzE55L6gUvHguwWjY82518zw1Z3VbDeWgx3Jqs
 dp m/84'/0'/0'
 first_addr bc1q98wufxmtfh5qlk7fe5dzy2z8cflvqjysrh4fx2
+first_height  640445
 
 Throwaway1
 xpub xpub6CPrPHQbGqzQTCo7kZNrCuARsQXxrr3bsUvFFidgj4L3BNrni4fEFT5s3NbGz2JEcSyTXzrKfkAmcaKxyboMjRzPMwvHjCuUWHwGD7Zvf9x
