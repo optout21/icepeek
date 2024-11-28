@@ -118,6 +118,10 @@ impl AppStateUpdate {
         self.wallet.clone()
     }
 
+    pub(crate) fn utxo_store(&self) -> UtxoStore {
+        self.utxo_store.clone()
+    }
+
     pub fn prepare_wallet_definition(
         network: &str,
         xpub: String,
@@ -359,6 +363,10 @@ impl AppEventHandling {
         self.app.read().unwrap().wallet()
     }
 
+    pub(crate) fn utxo_store(&self) -> UtxoStore {
+        self.app.read().unwrap().utxo_store()
+    }
+
     pub fn do_callback(&mut self, forced: bool) {
         self.app.write().unwrap().do_callback(forced).clone()
     }
@@ -486,6 +494,10 @@ impl AppAsync {
 
     pub fn wallet(&self) -> Wallet {
         self.app.read().unwrap().wallet()
+    }
+
+    pub fn utxo_store(&self) -> UtxoStore {
+        self.app.read().unwrap().utxo_store()
     }
 
     pub fn do_callback(&mut self, forced: bool) {

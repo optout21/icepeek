@@ -86,6 +86,8 @@ pub(crate) struct IcedApp {
     setup_addr_count: String,
     setup_birth_hint: String,
     address_preview: String,
+    utxos: String,
+    utxo_last_serial: u32,
 }
 
 impl IcedApp {
@@ -125,6 +127,45 @@ impl IcedApp {
                 s = s + &a.address.to_string() + " (" + &a.derivation.to_string() + ")\n";
             }
             self.address_preview = s;
+        }
+    }
+
+    fn update_utxos(&mut self, force: bool) {
+        if let Some(app) = self.app.as_ref() {
+            let utxo_store = &app.utxo_store();
+            let serial = utxo_store.serial_no();
+            if force || self.utxo_last_serial == 0 || serial > self.utxo_last_serial {
+                // need refresh
+                let mut text = String::new();
+                for (txid, ui) in utxo_store.get_utxos() {
+                    if ui.is_relevant() {
+                        for (addr, amnt) in ui.outputs() {
+                            let txstr = txid.to_string();
+                            text = format!(
+                                "{} sats,  bl: {}  {}  {}  tx: {}\n",
+                                amnt.to_sat(),
+                                ui.height(),
+                                if let Some(spent) = ui.spent_height() {
+                                    format!("spent: {}", spent)
+                                } else {
+                                    "(unspent)".to_string()
+                                },
+                                addr,
+                                txstr[0..6],
+                                txstr[txstr.len() - 4, txstr.len() - 1],
+                            ) + &text;
+                        }
+                    }
+                }
+                if text.len() == 0 {
+                    text = "No UTXOs found".to_string();
+                }
+                self.utxos = text;
+                self.utxo_last_serial = serial;
+            }
+        } else {
+            self.utxos = "No UTXOs (init)".to_string();
+            self.utxo_last_serial = 0;
         }
     }
 
@@ -185,6 +226,8 @@ impl IcedApp {
                 .size(15),
             ]
             .padding(10),
+            row![text("UTXOs:").size(15),].padding(10),
+            row![scrollable(text(&self.utxos).size(15)).height(200)].padding(10),
             row![button("(Refresh)").on_press(Message::Refresh),].padding(10),
         ]
         .padding(10)
@@ -286,11 +329,13 @@ impl Application for IcedApp {
             view: UiView::Setup,
             app: None,
             setup_network: &flags.network,
-            setup_xpub: "xpub6CPrPHQbGqzQTCo7kZNrCuARsQXxrr3bsUvFFidgj4L3BNrni4fEFT5s3NbGz2JEcSyTXzrKfkAmcaKxyboMjRzPMwvHjCuUWHwGD7Zvf9x".to_owned(), // TODO change to empty
+            setup_xpub: "xpub6CDDB17Xj7pDDWedpLsED1JbPPQmyuapHmAzQEEs2P57hciCjwQ3ov7TfGsTZftAM2gVdPzE55L6gUvHguwWjY82518zw1Z3VbDeWgx3Jqs".to_owned(), // TODO change to empty
             setup_derivation: "m/84'/0'/0'".to_owned(),
             setup_addr_count: "20".to_owned(),
             setup_birth_hint: "0".to_owned(),
             address_preview: "".to_owned(),
+            utxos: "".to_owned(),
+            utxo_last_serial: 0,
         };
         app.update_address_preview();
         (app, Command::none())
@@ -325,11 +370,11 @@ impl Application for IcedApp {
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
             Message::Refresh => {
-                // refresh, do nothing else
+                self.update_utxos(true);
             }
             Message::Event(ev) => match ev {
                 Event::AppStateChanged => {
-                    // refresh, do nothing else
+                    self.update_utxos(false);
                 }
             },
             Message::SetupComplete => {
