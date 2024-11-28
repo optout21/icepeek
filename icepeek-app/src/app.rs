@@ -252,6 +252,7 @@ impl AppStateUpdate {
             NodeMessage::BlocksDisconnected(_disconnected_headers) => (),
             NodeMessage::TxSent(_txid) => (),
             NodeMessage::TxBroadcastFailure(_failure_payload) => (),
+            NodeMessage::FeeFilter(_) => (),
         }
         Ok(ControlFlow::Continue(()))
     }
@@ -410,18 +411,6 @@ impl AppAsync {
 
         // Create a new kyoto node builder
         let builder = NodeBuilder::new(wallet_definition.network);
-        let anchor_mainnet_640k = HeaderCheckpoint::new(
-            640_000,
-            BlockHash::from_str("0000000000000000000b3021a283b981dd08f4ccf318b684b214f995d102af43")
-                .unwrap(),
-        );
-        /*
-        let anchor_mainnet_710k = HeaderCheckpoint::new(
-            710_000,
-            BlockHash::from_str("00000000000000000007822e1ddba0bed6a55f0072aa1584c70a2f81c275f587")
-                .unwrap(),
-        );
-        */
         // Add node preferences and build the node/client
         let (node, client) = builder
             // The Bitcoin scripts to monitor
@@ -433,7 +422,7 @@ impl AppAsync {
                     .collect(),
             )
             // Only scan blocks strictly after an anchor checkpoint
-            .anchor_checkpoint(anchor_mainnet_640k)
+            .filter_startpoint(wallet_definition.birth_height_hint)
             // The number of connections we would like to maintain
             .num_required_peers(3)
             .build_node()

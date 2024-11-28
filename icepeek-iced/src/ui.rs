@@ -332,7 +332,7 @@ impl Application for IcedApp {
             setup_xpub: "xpub6CDDB17Xj7pDDWedpLsED1JbPPQmyuapHmAzQEEs2P57hciCjwQ3ov7TfGsTZftAM2gVdPzE55L6gUvHguwWjY82518zw1Z3VbDeWgx3Jqs".to_owned(), // TODO change to empty
             setup_derivation: "m/84'/0'/0'".to_owned(),
             setup_addr_count: "20".to_owned(),
-            setup_birth_hint: "0".to_owned(),
+            setup_birth_hint: "710000".to_owned(),
             address_preview: "".to_owned(),
             utxos: "".to_owned(),
             utxo_last_serial: 0,
