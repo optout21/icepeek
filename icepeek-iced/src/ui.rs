@@ -142,7 +142,7 @@ impl IcedApp {
                         for (addr, amnt) in ui.outputs() {
                             let txstr = txid.to_string();
                             text = format!(
-                                "{} sats,  bl: {}  {}  {}  tx: {}\n",
+                                "{} sats,  bl: {}  {}  {}  tx: {}..{}\n",
                                 amnt.to_sat(),
                                 ui.height(),
                                 if let Some(spent) = ui.spent_height() {
@@ -151,8 +151,8 @@ impl IcedApp {
                                     "(unspent)".to_string()
                                 },
                                 addr,
-                                txstr[0..6],
-                                txstr[txstr.len() - 4, txstr.len() - 1],
+                                &txstr[0..6],
+                                &txstr[txstr.len() - 4 .. txstr.len()],
                             ) + &text;
                         }
                     }
