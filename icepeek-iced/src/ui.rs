@@ -65,7 +65,7 @@ pub(crate) struct AppSettings {
 
 impl AppSettings {
     fn network_values() -> Vec<&'static str> {
-        vec!["Mainnet", "Testnet"]
+        vec!["Mainnet", "Testnet", "Signet"]
     }
 }
 

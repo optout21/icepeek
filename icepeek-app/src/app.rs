@@ -131,6 +131,7 @@ impl AppStateUpdate {
     ) -> WalletDefinition {
         let network = match network {
             "Mainnet" => bitcoin::Network::Bitcoin,
+            "Signet" => bitcoin::Network::Signet,
             _ => bitcoin::Network::Testnet,
         };
         WalletDefinition {
