@@ -152,7 +152,7 @@ impl IcedApp {
                                 },
                                 addr,
                                 &txstr[0..6],
-                                &txstr[txstr.len() - 4 .. txstr.len()],
+                                &txstr[txstr.len() - 4..txstr.len()],
                             ) + &text;
                         }
                     }

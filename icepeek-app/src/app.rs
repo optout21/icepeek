@@ -5,8 +5,8 @@ use crate::utxo_store::UtxoStore;
 use crate::wallet::{AddressInfo, Wallet, WalletDefinition};
 
 use kyoto::{
-    Address, BlockHash, ClientError, HeaderCheckpoint, Network, NodeBuilder, NodeMessage,
-    ScriptBuf, Transaction,
+    Address, BlockHash, Client, ClientError, Event, HeaderCheckpoint, Log, Network, NodeBuilder,
+    ScriptBuf, Transaction, Warning,
 };
 
 use bitcoin::bip32::DerivationPath;
@@ -149,7 +149,8 @@ impl AppStateUpdate {
             "xpub6CDDB17Xj7pDDWedpLsED1JbPPQmyuapHmAzQEEs2P57hciCjwQ3ov7TfGsTZftAM2gVdPzE55L6gUvHguwWjY82518zw1Z3VbDeWgx3Jqs".to_string(),
             DEFAULT_DERIVATION_PATH_BASE.to_string(),
             "20".to_string(),
-            "640000".to_string(),
+            // "640000".to_string(),
+            "0".to_string(),
         )
     }
 
@@ -211,38 +212,22 @@ impl AppStateUpdate {
         }
     }
 
-    fn handle_client_event(
+    fn handle_event(
         &mut self,
-        event: NodeMessage,
+        event: &Event,
         watch: &[ScriptBuf],
     ) -> Result<ControlFlow<()>, Error> {
         // log::debug!("Received client event: {:?}, watch.len {}", event, watch.len());
 
         match event {
-            NodeMessage::Dialog(d) => println!("Info: {}", d),
-            NodeMessage::Warning(e) => {
-                // TODO check Warnings
-                println!("WARN: {}", e);
-            }
-            NodeMessage::StateChange(node_state) => println!("StateChange: {}", node_state),
-            NodeMessage::ConnectionsMet => {
-                println!("Peer connections met");
-                self.do_callback(false);
-            }
-            NodeMessage::Progress(progress) => {
-                self.state.header_tip = progress.tip_height as u64;
-                self.state.filter_header_tip = progress.filter_headers as u64;
-                self.state.filter_tip = progress.filters as u64;
-                self.do_callback(false);
-            }
-            NodeMessage::Block(block) => {
+            Event::Block(block) => {
                 println!("Block: {}", block.height);
                 for tx in &block.block.txdata {
                     self.apply(&tx, block.height, watch);
                 }
                 self.do_callback(true);
             }
-            NodeMessage::Synced(update) => {
+            Event::Synced(update) => {
                 let height = update.tip().height;
                 // println!("Synced chain up to block {}", height);
                 // println!("Chain tip: {}", update.tip().hash);
@@ -250,10 +235,36 @@ impl AppStateUpdate {
                 // println!("Nakamoto BlockHeadersSynced {}", height)
                 self.do_callback(false);
             }
-            NodeMessage::BlocksDisconnected(_disconnected_headers) => (),
-            NodeMessage::TxSent(_txid) => (),
-            NodeMessage::TxBroadcastFailure(_failure_payload) => (),
+            Event::BlocksDisconnected(_disconnected_headers) => (),
         }
+        Ok(ControlFlow::Continue(()))
+    }
+
+    fn handle_log_event(&mut self, event: &Log) -> Result<ControlFlow<()>, Error> {
+        // log::debug!("Received client event: {:?}, watch.len {}", event, watch.len());
+
+        match event {
+            Log::Debug(s) => println!("Debug: {}", s),
+            Log::StateChange(node_state) => println!("StateChange: {}", node_state),
+            Log::ConnectionsMet => {
+                println!("Peer connections met");
+                self.do_callback(false);
+            }
+            Log::Progress(progress) => {
+                self.state.header_tip = progress.tip_height as u64;
+                self.state.filter_header_tip = progress.filter_headers as u64;
+                self.state.filter_tip = progress.filters as u64;
+                self.do_callback(false);
+            }
+            Log::TxSent(_txid) => (),
+        }
+        Ok(ControlFlow::Continue(()))
+    }
+
+    fn handle_warn_event(&mut self, warn: &Warning) -> Result<ControlFlow<()>, Error> {
+        // log::debug!("Received client event: {:?}, watch.len {}", event, watch.len());
+        // TODO differentiate warnings
+        println!("WARNING: {}", warn.to_string());
         Ok(ControlFlow::Continue(()))
     }
 
@@ -308,7 +319,7 @@ impl AppEventHandling {
     pub(crate) fn new(
         wallet_definition: WalletDefinition,
         app_callback: AppCallback,
-        receiver: tokio::sync::broadcast::Receiver<NodeMessage>,
+        client: Client,
     ) -> Result<(Self, Options), String> {
         println!("AppEventHandling::new()");
 
@@ -335,9 +346,7 @@ impl AppEventHandling {
 
         // run event handling loop in the background
         let th1 =
-            tokio::task::spawn(
-                async move { Self::event_loop_blocking(&app, watch, receiver).await },
-            );
+            tokio::task::spawn(async move { Self::event_loop_blocking(&app, watch, client).await });
         app_event.event_loop_thread = Some(th1);
         log::info!("AppEventHandling: background event handling loop started");
 
@@ -376,19 +385,47 @@ impl AppEventHandling {
     pub async fn event_loop_blocking(
         app: &Arc<RwLock<AppStateUpdate>>,
         watch: Vec<ScriptBuf>,
-        mut receiver: tokio::sync::broadcast::Receiver<NodeMessage>,
+        client: Client,
     ) -> Result<(), Error> {
         log::info!("AppEventHandling: waiting for events...");
 
+        // Split the client into components that send messages and listen to messages.
+        // With this construction, different parts of the program can take ownership of
+        // specific tasks.
+        let Client {
+            requester: _,
+            mut log_rx,
+            mut warn_rx,
+            mut event_rx,
+        } = client;
+
         loop {
-            if let Ok(message) = receiver.recv().await {
-                if let Break(()) = app.write().unwrap().handle_client_event(message, &watch)? {
-                    break;
+            tokio::select! {
+                event = event_rx.recv() => {
+                    if let Some(event) = event {
+                        if let Break(()) = app.write().unwrap().handle_event(&event, &watch)? {
+                            break;
+                        }
+                    }
+                }
+                log = log_rx.recv() => {
+                    if let Some(log) = log {
+                        if let Break(()) = app.write().unwrap().handle_log_event(&log)? {
+                            break;
+                        }
+                    }
+                }
+                warn = warn_rx.recv() => {
+                    if let Some(warn) = warn {
+                        if let Break(()) = app.write().unwrap().handle_warn_event(&warn)? {
+                            break;
+                        }
+                    }
                 }
             }
         }
-        log::info!("AppEventHandling: exiting loop");
 
+        log::info!("AppEventHandling: exiting loop");
         Ok(())
     }
 }
@@ -431,17 +468,14 @@ impl AppAsync {
                     .addrs()
                     .iter()
                     .map(|ai| ai.address.script_pubkey())
-                    .collect(),
+                    .collect::<Vec<_>>(),
             )
             // Only scan blocks strictly after an anchor checkpoint
-            .anchor_checkpoint(anchor_mainnet_640k)
+            // .anchor_checkpoint(anchor_mainnet_640k)
             // The number of connections we would like to maintain
-            .num_required_peers(3)
-            .build_node()
+            .required_peers(2)
+            .build()
             .unwrap();
-
-        // Split the client into components that send messages and listen to messages
-        let (_sender, receiver) = client.split();
 
         // Run the node and wait for the sync message;
         tokio::task::spawn(async move { node.run().await });
@@ -451,8 +485,7 @@ impl AppAsync {
             wallet_definition.clone(),
             app_callback,
             // node,
-            // client.clone(),
-            receiver,
+            client,
         )?;
         let addrs = app.app.read().unwrap().wallet().addrs();
         let app = Arc::new(RwLock::new(app));

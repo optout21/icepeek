@@ -57,6 +57,7 @@ cargo r -p icepeek-iced
 
 - show state (state Connecting, FastSync, ChilledSync; show number of peers)
 - more user-friendly starting block supoprt (no hash needed, custom height, start filters from there)
+- initial DNS-based peer discovery doesn't work with VPN (kyoto?)
 - Address discovery (gap limit, add new addresses)
 - download filters in reverse order
 
