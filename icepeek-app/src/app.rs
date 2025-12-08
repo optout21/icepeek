@@ -5,8 +5,7 @@ use crate::utxo_store::UtxoStore;
 use crate::wallet::{AddressInfo, Wallet, WalletDefinition};
 
 use kyoto::{
-    Address, BlockHash, Client, ClientError, Event, HeaderCheckpoint, Log, Network, NodeBuilder,
-    ScriptBuf, Transaction, Warning,
+    Address, BlockHash, Builder, Client, ClientError, Event, HeaderCheckpoint, Info, Network, Requester, ScriptBuf, Transaction, Warning
 };
 
 use bitcoin::bip32::DerivationPath;
@@ -29,6 +28,8 @@ pub struct AppState {
     pub filter_header_tip: u64,
     /// Filter
     pub filter_tip: u64,
+    /// The number of filters to check.
+    pub filters_to_check: u32,
 
     // Balance
     /// Current balance
@@ -216,6 +217,7 @@ impl AppStateUpdate {
         &mut self,
         event: &Event,
         watch: &[ScriptBuf],
+        _requester: &Requester,
     ) -> Result<ControlFlow<()>, Error> {
         // log::debug!("Received client event: {:?}, watch.len {}", event, watch.len());
 
@@ -227,7 +229,7 @@ impl AppStateUpdate {
                 }
                 self.do_callback(true);
             }
-            Event::Synced(update) => {
+            Event::FiltersSynced(update) => {
                 let height = update.tip().height;
                 // println!("Synced chain up to block {}", height);
                 // println!("Chain tip: {}", update.tip().hash);
@@ -235,28 +237,51 @@ impl AppStateUpdate {
                 // println!("Nakamoto BlockHeadersSynced {}", height)
                 self.do_callback(false);
             }
-            Event::BlocksDisconnected(_disconnected_headers) => (),
+            Event::BlocksDisconnected{ accepted: _, disconnected: _} => {
+                // TODO
+            }
+            Event::IndexedFilter(filter) => {
+                self.state.filter_tip = filter.height() as u64;
+                if filter.contains_any(watch.to_vec().iter()) {
+                    let hash = filter.block_hash();
+                    println!("Found script at {}!", hash);
+                    // let _indexed_block = requester.get_block(hash).await.unwrap();
+                    //// let coinbase = indexed_block.block.txdata.first().unwrap().compute_txid();
+                    //// tracing::info!("Coinbase transaction ID: {}", coinbase);
+                }
+                self.do_callback(false);
+            }
         }
         Ok(ControlFlow::Continue(()))
     }
 
-    fn handle_log_event(&mut self, event: &Log) -> Result<ControlFlow<()>, Error> {
+    fn handle_info_event(&mut self, event: &Info) -> Result<ControlFlow<()>, Error> {
         // log::debug!("Received client event: {:?}, watch.len {}", event, watch.len());
 
         match event {
-            Log::Debug(s) => println!("Debug: {}", s),
-            Log::StateChange(node_state) => println!("StateChange: {}", node_state),
-            Log::ConnectionsMet => {
+            Info::SuccessfulHandshake => println!("SuccessfulHandshake"),
+            Info::ConnectionsMet => {
                 println!("Peer connections met");
                 self.do_callback(false);
             }
-            Log::Progress(progress) => {
-                self.state.header_tip = progress.tip_height as u64;
+            Info::Progress(progress) => {
+                self.state.header_tip = std::cmp::max(self.state.header_tip, progress.filter_headers as u64);
                 self.state.filter_header_tip = progress.filter_headers as u64;
                 self.state.filter_tip = progress.filters as u64;
+                self.state.filters_to_check = progress.total_to_check;
                 self.do_callback(false);
             }
-            Log::TxSent(_txid) => (),
+            Info::NewChainHeight(height) => {
+                println!("NewChainHeight: {}", height);
+                self.state.header_tip = *height as u64;
+                self.do_callback(false);
+            }
+            Info::NewFork{tip} => println!("NewFork: {:?}", tip),
+            Info::TxGossiped(_txid) => (),
+            Info::BlockReceived(block_hash) => {
+                println!("Block received {:?}", block_hash);
+                // TODO check for transactions
+            },
         }
         Ok(ControlFlow::Continue(()))
     }
@@ -393,8 +418,8 @@ impl AppEventHandling {
         // With this construction, different parts of the program can take ownership of
         // specific tasks.
         let Client {
-            requester: _,
-            mut log_rx,
+            requester,
+            mut info_rx,
             mut warn_rx,
             mut event_rx,
         } = client;
@@ -403,14 +428,14 @@ impl AppEventHandling {
             tokio::select! {
                 event = event_rx.recv() => {
                     if let Some(event) = event {
-                        if let Break(()) = app.write().unwrap().handle_event(&event, &watch)? {
+                        if let Break(()) = app.write().unwrap().handle_event(&event, &watch, &requester)? {
                             break;
                         }
                     }
                 }
-                log = log_rx.recv() => {
-                    if let Some(log) = log {
-                        if let Break(()) = app.write().unwrap().handle_log_event(&log)? {
+                info = info_rx.recv() => {
+                    if let Some(info) = info {
+                        if let Break(()) = app.write().unwrap().handle_info_event(&info)? {
                             break;
                         }
                     }
@@ -444,10 +469,11 @@ impl AppAsync {
     ) -> Result<AppAsync, String> {
         println!("AppAsync::create_and_start()");
 
-        let wallet = Wallet::new(wallet_definition.clone())?;
+        // TODO remove, move check to incoming filter
+        let _wallet = Wallet::new(wallet_definition.clone())?;
 
         // Create a new kyoto node builder
-        let builder = NodeBuilder::new(wallet_definition.network);
+        let builder = Builder::new(wallet_definition.network);
         let anchor_mainnet_640k = HeaderCheckpoint::new(
             640_000,
             BlockHash::from_str("0000000000000000000b3021a283b981dd08f4ccf318b684b214f995d102af43")
@@ -462,14 +488,6 @@ impl AppAsync {
         */
         // Add node preferences and build the node/client
         let (node, client) = builder
-            // The Bitcoin scripts to monitor
-            .add_scripts(
-                wallet
-                    .addrs()
-                    .iter()
-                    .map(|ai| ai.address.script_pubkey())
-                    .collect::<Vec<_>>(),
-            )
             // Only scan blocks strictly after an anchor checkpoint
             // .anchor_checkpoint(anchor_mainnet_640k)
             // The number of connections we would like to maintain
