@@ -1,5 +1,12 @@
 # Icepeek
 
+## Update Dec'2025
+
+The concept is somwhat weakened by the time taken to download all the filter.
+Nonetheless, Kyoto is improving. Update to [v0.15](https://github.com/2140-dev/kyoto/releases/tag/v0.15.0) is ongoing
+(https://github.com/optout21/icepeek/tree/kyoto-15).
+
+
 ## Description
 Watch-only bitcoin onchain balance checker, private and secure.
 Can be used for checking cold wallet balances ("peek under the ice").
@@ -9,7 +16,7 @@ WARNING: Don't ever enter any seedphrase or private key in this project!
 Warning: This software is prototype with no warranty whatsoever.
 
 Based on compact block filters (BIP-147/148), peer-to-peer, not using servers.
-Written in Rust, using [kyoto-cbf lib](https://github.com/rustaceanrob/kyoto).
+Written in Rust, using [kyoto-cbf lib](https://github.com/2140-dev/kyoto).
 
 Friendly Advice: Don't forget to regularly check your keys!
 
